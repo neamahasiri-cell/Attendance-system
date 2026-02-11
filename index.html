@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>نظام الحضور والغياب الشامل - 1448 هـ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+
+<body>
+
+  <!-- ══ LOGIN MODAL ══ -->
+  <div id="loginModal" class="login-modal">
+    <div class="login-card">
+      <div style="text-align:center;margin-bottom:30px">
+        <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--blue),var(--navy));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px">🔐</div>
+        <h2 style="font-size:24px;font-weight:900;color:var(--navy);margin-bottom:8px">تسجيل الدخول</h2>
+        <p style="font-size:13px;color:var(--gray-600)">نظام الحضور والغياب - الثانوية الأولى بجازان</p>
+      </div>
+
+      <div style="margin-bottom:24px">
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--gray-600);margin-bottom:8px">الرقم السري</label>
+        <input type="password" id="passwordInput" placeholder="أدخلي الرقم السري..."
+               style="width:100%;padding:14px 16px;border:2px solid var(--gray-200);border-radius:12px;font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:all .2s"
+               onkeypress="if(event.key==='Enter')attemptLogin()"
+               onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(30,94,243,.1)'"
+               onblur="this.style.borderColor='var(--gray-200)';this.style.boxShadow='none'">
+        <div id="loginError" style="display:none;margin-top:8px;padding:10px;background:var(--absent-lt);color:var(--absent);border-radius:8px;font-size:12px;font-weight:600"></div>
+      </div>
+
+      <button onclick="attemptLogin()"
+              style="width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--navy));color:#fff;border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:16px"
+              onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(30,94,243,.3)'"
+              onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+        🔓 دخول
+      </button>
+
+      <button onclick="enterViewMode()"
+              style="width:100%;padding:12px;background:var(--gray-100);color:var(--gray-600);border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s"
+              onmouseover="this.style.background='var(--gray-200)'"
+              onmouseout="this.style.background='var(--gray-100)'">
+        👁️ الدخول للقراءة فقط
+      </button>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-200);text-align:center">
+        <p style="font-size:11px;color:var(--gray-400);margin-bottom:8px">💡 للحصول على الرقم السري، تواصلي مع المشرفة</p>
+        <p style="font-size:10px;color:var(--gray-400)">أ. عيشة عواجي - وكيلة شؤون الطالبات</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VIEW MODE OVERLAY ══ -->
+  <div id="viewModeOverlay" style="display:none;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#d97706);padding:12px 20px;z-index:100;box-shadow:0 -4px 12px rgba(0,0,0,.1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">👁️</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#fff">وضع القراءة فقط</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.8)">لا يمكنك التعديل في هذا الوضع</div>
+        </div>
+      </div>
+      <button onclick="logout()"
+              style="padding:8px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s"
+              onmouseover="this.style.background='rgba(255,255,255,.3)'"
+              onmouseout="this.style.background='rgba(255,255,255,.2)'">
+        🚪 تسجيل خروج
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ OFFICIAL HEADER ══ -->
+  <div class="official-header">
+    <div class="official-grid">
+      <div class="official-right">
+        <div class="k1">المملكة العربية السعودية</div>
+        <div class="k2">وزارة التعليم</div>
+        <div class="k3">إدارة تعليم جازان</div>
+        <div class="k4">الثانوية الأولى بجازان</div>
+      </div>
+
+      <div class="official-center">
+        <img src="assets/ministry-logo.png" alt="وزارة التعليم - Ministry of Education"
+             style="width:160px;height:auto;max-height:110px;object-fit:contain"
+             onerror="this.style.display='none';document.getElementById('ministryFallback').style.display='flex'">
+        <div id="ministryFallback" style="display:none;width:160px;height:110px;margin:0 auto;background:linear-gradient(135deg,#14b8a6,#0d9488);border-radius:12px;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+          <div style="font-size:28px;font-weight:900;color:#fff">🎓</div>
+          <div style="font-size:16px;font-weight:800;color:#fff">وزارة التعليم</div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.8)">Ministry of Education</div>
+        </div>
+      </div>
+
+      <div class="official-left">
+        <div class="e1">Kingdom of Saudi Arabia</div>
+        <div class="e2">Ministry of Education</div>
+        <div class="e3">Jazan Education Department</div>
+        <div class="e4">First High School - Jazan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HEADER ══ -->
+  <div class="header">
+    <div class="header-dots"></div>
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-badge">📋 نظام الحضور والغياب</div>
+        <div class="header-title">نظام الحضور والغياب المتقدم</div>
+        <div class="header-sub">مديرة المدرسة: أ. هبه صم • المشرفة: أ. عيشة عواجي (وكيلة شؤون الطالبات) • إعداد وتصميم: أ. نعمه فائع عسيري • العام الدراسي 1447-1448 هـ</div>
+      </div>
+      <div class="header-right">
+        <div id="headerStats"></div>
+        <div class="user-badge">
+          <div class="user-avatar"></div>
+          <div>
+            <div class="user-name">عبشة عواجي</div>
+            <div class="user-role">وكيلة شؤون الطالبات</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TABS ══ -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('register')">📋 سجل الحضور</button>
+    <button class="tab-btn" onclick="showTab('students')">👩‍🎓 إدارة الطالبات</button>
+    <button class="tab-btn" onclick="showTab('reports')">📊 التقارير الإحصائية</button>
+    <button class="tab-btn" onclick="showTab('certificates')">🏆 شهادات الشكر</button>
+    <button class="tab-btn" onclick="showTab('letters')">✉️ خطابات أولياء الأمور</button>
+    <button class="tab-btn" onclick="showTab('admin')">👥 لوحة الإدارة</button>
+  </div>
+
+  <!-- ══════════════ TAB: REGISTER ══════════════ -->
+  <div id="tab-register" class="page active">
+    <h2 class="page-title">📋 سجل الحضور والغياب - الفصل الدراسي الثاني (29 رجب 1448 هـ)</h2>
+
+    <div class="controls-row">
+      <div class="ctrl">
+        <span class="ctrl-label">الصف:</span>
+        <select class="form-select" id="registerGrade" onchange="updateAttendanceTable()">
+          <option value="all">جميع الصفوف</option>
+          <option value="first">الأول ثانوي</option>
+          <option value="second">الثاني ثانوي</option>
+          <option value="third">الثالث ثانوي</option>
+        </select>
+      </div>
+
+      <div class="ctrl">
+        <span class="ctrl-label">الشعبة:</span>
+        <select class="form-select" id="registerSection" onchange="updateAttendanceTable()">
+          <option value="all">جميع الشعب</option>
+          <option value="١">شعبة ١</option>
+          <option value="٢">شعبة ٢</option>
+          <option value="٣">شعبة ٣</option>
+          <option value="٤">شعبة ٤</option>
+          <option value="٥">شعبة ٥</option>
+        </select>
+      </div>
+
+      <div class="controls-actions">
+        <button class="btn btn-outline" onclick="updateAttendanceTable()">🔄 تحديث</button>
+        <button class="btn btn-primary" onclick="exportAttendanceExcel()">📥 تصدير Excel</button>
+      </div>
+    </div>
+
+    <div id="attendanceTableContainer"></div>
+  </div>
+
+  <!-- ══════════════ TAB: STUDENTS ══════════════ -->
+  <div id="tab-students" class="page">
+    <h2 class="page-title">👩‍🎓 إدارة بيانات الطالبات</h2>
+
+    <div class="counter">
+      <div class="counter-num" id="studentCount">0</div>
+      <div class="counter-label">إجمالي الطالبات المسجلات</div>
+    </div>
+
+    <div class="mgr-grid">
+      <div class="mgr-card">
+        <div class="mgr-card-title">➕ إضافة طالبة جديدة</div>
+
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">اسم الطالبة الكامل</label>
+            <input type="text" class="form-input" id="studentName" placeholder="مثال: سارة أحمد المالكي"/>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الصف</label>
+            <select class="form-select" id="studentGrade">
+              <option value="first">الأول ثانوي</option>
+              <option value="second">الثاني ثانوي</option>
+              <option value="third">الثالث ثانوي</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الشعبة</label>
+            <select class="form-select" id="studentSection">
+              <option value="١">شعبة ١</option>
+              <option value="٢">شعبة ٢</option>
+              <option value="٣">شعبة ٣</option>
+              <option value="٤">شعبة ٤</option>
+              <option value="٥">شعبة ٥</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn btn-primary" onclick="addStudent()">➕ إضافة</button>
+          <button class="btn btn-outline" onclick="clearForm()">🔄 مسح</button>
+        </div>
+      </div>
+
+      <div class="mgr-card">
+        <div class="mgr-card-title">📥 استيراد عدة طالبات</div>
+
+        <div class="import-area">
+          <div style="font-size:11px;color:var(--gray-600);margin-bottom:8px">الصق أسماء الطالبات (اسم واحد في كل سطر)</div>
+          <textarea id="bulkImport" placeholder="سارة أحمد المالكي&#10;نورا خالد العتيبي&#10;ريم محمد الدوسري"></textarea>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center">
+          <select class="form-select" id="bulkGrade" style="flex:1">
+            <option value="first">الأول ثانوي</option>
+            <option value="second">الثاني ثانوي</option>
+            <option value="third">الثالث ثانوي</option>
+          </select>
+          <select class="form-select" id="bulkSection" style="width:100px">
+            <option value="١">شعبة ١</option>
+            <option value="٢">شعبة ٢</option>
+            <option value="٣">شعبة ٣</option>
+            <option value="٤">شعبة ٤</option>
+            <option value="٥">شعبة ٥</option>
+          </select>
+          <button class="btn btn-primary" onclick="importBulk()">📥 استيراد</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mgr-card">
+      <div class="mgr-card-title" style="justify-content:space-between">
+        <span>👥 قائمة الطالبات المسجلات</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="clearAll()">🗑️ مسح الكل</button>
+          <button class="btn btn-success" onclick="applyToSystem()">✅ تطبيق على النظام</button>
+        </div>
+      </div>
+      <div class="students-list" id="studentsList"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: REPORTS ══════════════ -->
+  <div id="tab-reports" class="page">
+    <h2 class="page-title">📊 التقارير الإحصائية</h2>
+
+    <div class="mgr-card" style="margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <button class="btn btn-primary" onclick="generateDailyReport()" style="padding:14px">📅 تقرير يومي</button>
+        <button class="btn btn-primary" onclick="generateWeeklyReport()" style="padding:14px">📆 تقرير أسبوعي</button>
+        <button class="btn btn-primary" onclick="generateMonthlyReport()" style="padding:14px">📊 تقرير شهري</button>
+      </div>
+    </div>
+
+    <div id="reportContent" style="display:none">
+      <div class="mgr-card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap">
+          <div>
+            <h3 id="reportTitle" style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">تقرير الحضور</h3>
+            <p id="reportDate" style="font-size:12px;color:var(--gray-600)"></p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline" onclick="printReport()">🖨️ طباعة</button>
+            <button class="btn btn-success" onclick="exportReportPDF()">📄 PDF</button>
+            <button class="btn btn-primary" onclick="exportReportExcel()">📊 Excel</button>
+          </div>
+        </div>
+
+        <div id="reportStats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="mgr-card">
+          <h4 style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:16px">📊 توزيع الحضور والغياب</h4>
+          <div id="pieChartBox"></div>
+        </div>
+        <div class="mgr-card">
+          <h4 style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:16px">📈 إحصائيات مقارنة</h4>
+          <div id="barChartBox"></div>
+        </div>
+      </div>
+
+      <div class="mgr-card">
+        <h4 style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:16px">📋 التفاصيل الكاملة</h4>
+        <div id="reportTable" style="overflow-x:auto"></div>
+      </div>
+    </div>
+
+    <div id="reportsEmptyState" class="mgr-card" style="text-align:center;padding:60px">
+      <div style="font-size:64px;margin-bottom:16px">📊</div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">التقارير الإحصائية الشاملة</div>
+      <div style="font-size:13px;color:var(--gray-600)">اختاري نوع التقرير من الأعلى لعرض الإحصائيات</div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: CERTIFICATES ══════════════ -->
+  <div id="tab-certificates" class="page">
+    <h2 class="page-title">🏆 شهادات الشكر والتقدير</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--present);margin-bottom:4px" id="perfectAttendanceCount">0</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">طالبات بدون غياب</div>
+      </div>
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--blue);margin-bottom:4px" id="excellentAttendanceCount">0</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">حضور ممتاز (95%+)</div>
+      </div>
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--excused);margin-bottom:4px" id="goodAttendanceCount">0</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">حضور جيد (90%+)</div>
+      </div>
+    </div>
+
+    <div class="mgr-card">
+      <div class="mgr-card-title" style="justify-content:space-between">
+        <span>🏆 الطالبات المستحقات لشهادات الشكر</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="printAllCertificates()">🖨️ طباعة الكل</button>
+          <button class="btn btn-primary" onclick="generateCertificates()">🔄 تحديث القائمة</button>
+        </div>
+      </div>
+      <div id="certificatesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: LETTERS ══════════════ -->
+  <div id="tab-letters" class="page">
+    <h2 class="page-title">✉️ خطابات أولياء الأمور</h2>
+    <div class="mgr-card" style="text-align:center;padding:40px">
+      <div style="font-size:48px;margin-bottom:16px">✉️</div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px">خطابات أولياء الأمور</div>
+      <div style="font-size:13px;color:var(--gray-600)">سيتم إنشاء الخطابات تلقائياً للطالبات اللي عندهن 3 أيام غياب بدون عذر</div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: ADMIN ══════════════ -->
+  <div id="tab-admin" class="page">
+    <h2 class="page-title">👥 لوحة تحكم المشرفة</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--blue);margin-bottom:4px">7</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">أعضاء الفريق</div>
+      </div>
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--present);margin-bottom:4px" id="onlineCount">-</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">متصل الآن</div>
+      </div>
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--excused);margin-bottom:4px">0</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">إدخالات اليوم</div>
+      </div>
+      <div class="mgr-card" style="text-align:center">
+        <div style="font-size:36px;font-weight:900;color:var(--late);margin-bottom:4px">0</div>
+        <div style="font-size:12px;color:var(--gray-600);font-weight:600">خطابات معلقة</div>
+      </div>
+    </div>
+
+    <div class="mgr-card" style="margin-bottom:24px">
+      <h3 style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:20px;display:flex;align-items:center;gap:10px">
+        <span style="background:var(--blue-lt);width:32px;height:32px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:16px">👥</span>
+        أعضاء الفريق وصلاحياتهم
+      </h3>
+      <div id="teamMembersList" style="display:grid;gap:12px"></div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL (Certificates/Letters) ══ -->
+  <div id="certificateModal" class="modal" style="display:none">
+    <div class="modal-inner">
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeCertificate()">✖ إغلاق</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ طباعة</button>
+      </div>
+      <div id="certificateContent" class="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══ -->
+  <div class="footer">
+    <div class="footer-grid">
+      <div class="footer-card">
+        <div class="footer-avatar" style="background:linear-gradient(135deg,#ec4899,#db2777)">ه</div>
+        <div class="footer-label">مديرة المدرسة</div>
+        <div class="footer-name">أ. هبه صم</div>
+      </div>
+
+      <div class="footer-card">
+        <div class="footer-avatar" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">ع</div>
+        <div class="footer-label"></div>
+        <div class="footer-name">أ. عيشة عواجي</div>
+        <div class="footer-sub">وكيلة شؤون الطالبات</div>
+      </div>
+
+      <div class="footer-card">
+        <div class="footer-avatar" style="background:linear-gradient(135deg,var(--blue),var(--navy))">ن</div>
+        <div class="footer-label">إعداد وتصميم</div>
+        <div class="footer-name">أ. نعمه فائع عسيري</div>
+        <div class="footer-sub"></div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-school">الثانوية الأولى بجازان</div>
+      <div class="footer-meta">إدارة تعليم جازان • وزارة التعليم • المملكة العربية السعودية</div>
+      <div class="footer-year">العام الدراسي 1447-1448 هـ (2025-2026 م)</div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="js/data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/students.js"></script>
+  <script src="js/attendance.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/certificates.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
